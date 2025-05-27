@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل مدیریت آرایشگر</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container barber-section">
+    <h1>پنل مدیریت آرایشگاه</h1>
+    <button class="btn-refresh" onclick="loadAppointments()">🔄 تازه‌سازی</button>
+
+    <div class="filter-section">
+         <label for="filterDate">نمایش نوبت‌ها برای تاریخ (مثال: ۱۴۰۳/۰۳/۰۵):</label>
+         <input type="text" id="filterDate" placeholder="YYYY/MM/DD یا خالی برای همه">
+         <button onclick="loadAppointments()">فیلتر</button>
+    </div>
+
+    <h2>لیست درخواست‌های نوبت</h2>
+    <div id="barberMessage"></div>
+    <table>
+        <thead>
+            <tr>
+                <th>نام</th>
+                <th>تلفن</th>
+                <th>خدمات</th>
+                <th>تاریخ</th>
+                <th>زمان</th>
+                <th>وضعیت</th>
+                <th>اقدامات</th>
+            </tr>
+        </thead>
+        <tbody id="appointmentsTable">
+            <tr><td colspan="7">در حال بارگذاری...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function loadAppointments() {
+        const filterDateInput = document.getElementById('filterDate');
+        const filterDate = filterDateInput ? filterDateInput.value : '';
+        const tableBody = document.getElementById('appointmentsTable');
+        const messageDiv = document.getElementById('barberMessage');
+
+        if (!tableBody || !messageDiv) return;
+
+        tableBody.innerHTML = '<tr><td colspan="7">در حال بارگذاری...</td></tr>';
+        messageDiv.innerHTML = '';
+
+        fetch(`api.php?action=get_appointments&date=${filterDate}`)
+            .then(response => response.json())
+            .then(data => {
+                tableBody.innerHTML = '';
+                if (data.success && data.appointments.length > 0) {
+                    data.appointments.forEach(app => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td data-label="نام">${app.first_name} ${app.last_name}</td>
+                            <td data-label="تلفن">${app.phone}</td>
+                            <td data-label="خدمات">${app.service}</td>
+                            <td data-label="تاریخ">${app.app_date}</td>
+                            <td data-label="زمان">${app.app_time}</td>
+                            <td data-label="وضعیت"><span class="${app.status}">${getStatusText(app.status)}</span></td>
+                            <td data-label="اقدامات" class="actions">
+                                ${app.status === 'pending' ? `
+                                    <button class="btn-confirm" onclick="updateStatus(${app.id}, 'confirmed')">تایید</button>
+                                    <button class="btn-reject" onclick="updateStatus(${app.id}, 'rejected')">رد</button>
+                                ` : (app.status === 'confirmed' ? 'تایید شده' : 'رد شده')}
+                                 <button onclick="promptMessage(${app.id})">پیام</button>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                } else if (data.success) {
+                     tableBody.innerHTML = '<tr><td colspan="7">هیچ نوبتی یافت نشد.</td></tr>';
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="7">خطا: ${data.message || 'ناشناخته'}</td></tr>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                tableBody.innerHTML = '<tr><td colspan="7">خطای شبکه در بارگذاری نوبت‌ها.</td></tr>';
+            });
+    }
+
+    function getStatusText(status) {
+        switch (status) {
+            case 'pending': return 'در انتظار';
+            case 'confirmed': return 'تایید شده';
+            case 'rejected': return 'رد شده';
+            default: return status;
+        }
+    }
+
+    function updateStatus(id, newStatus) {
+        const messageDiv = document.getElementById('barberMessage');
+        messageDiv.innerHTML = '';
+        fetch('api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'update_status', id: id, status: newStatus })
+        })
+        .then(response => response.json())
+        .then(data => {
+            messageDiv.className = data.success ? 'success' : 'error';
+            messageDiv.textContent = data.message;
+            loadAppointments();
+        })
+        .catch(error => {
+             console.error('Error:', error);
+             messageDiv.className = 'error';
+             messageDiv.textContent = 'خطای شبکه.';
+        });
+    }
+
+    function promptMessage(id) {
+        const barberMsg = prompt("پیام خود را برای مشتری وارد کنید (اختیاری):");
+        if (barberMsg !== null) {
+            const messageDiv = document.getElementById('barberMessage');
+            messageDiv.innerHTML = '';
+            fetch('api.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'send_message', id: id, barber_message: barberMsg })
+            })
+            .then(response => response.json())
+            .then(data => {
+                 messageDiv.className = data.success ? 'success' : 'error';
+                 messageDiv.textContent = data.message;
+            })
+            .catch(error => {
+                 console.error('Error:', error);
+                 messageDiv.className = 'error';
+                 messageDiv.textContent = 'خطای شبکه.';
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadAppointments);
+</script>
+
+</body>
+</html>

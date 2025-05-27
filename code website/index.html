@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رزرو نوبت آرایشگاه</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <h1>💈 آرایشگاه مدرن 💈</h1>
+
+    <div class="form-section">
+        <h2>رزرو نوبت جدید</h2>
+        <form id="bookingForm">
+            <label for="firstName">نام:</label>
+            <input type="text" id="firstName" name="firstName" required>
+
+            <label for="lastName">نام خانوادگی:</label>
+            <input type="text" id="lastName" name="lastName" required>
+
+            <label for="phone">شماره تلفن:</label>
+            <input type="tel" id="phone" name="phone" placeholder="مثال: 09123456789" required>
+
+            <label for="service">نوع خدمات:</label>
+            <select id="service" name="service" required>
+                <option value="">انتخاب کنید...</option>
+                <option value="کوتاه کردن مو">کوتاه کردن مو</option>
+                <option value="اصلاح صورت">اصلاح صورت</option>
+                <option value="کوتاهی و اصلاح">کوتاهی و اصلاح</option>
+                <option value="رنگ مو">رنگ مو</option>
+                <option value="سایر">سایر</option>
+            </select>
+
+            <label for="date">تاریخ (مثال: ۱۴۰۳/۰۳/۰۵):</label>
+            <input type="text" id="date" name="date" placeholder="فرمت:  Matisse/MM/DD" required>
+
+            <label for="time">زمان (مثال: ۱۶:۳۰):</label>
+            <input type="text" id="time" name="time" placeholder="فرمت: HH:MM" required>
+
+            <label for="message">پیام (اختیاری):</label>
+            <textarea id="message" name="message" rows="3"></textarea>
+
+            <button type="submit">رزرو نوبت</button>
+        </form>
+        <div id="bookingMessage"></div>
+    </div>
+
+    <hr>
+
+    <div class="status-section">
+        <h2>استعلام وضعیت نوبت</h2>
+        <form id="statusForm">
+            <label for="checkPhone">شماره تلفن خود را وارد کنید:</label>
+            <input type="tel" id="checkPhone" name="checkPhone" placeholder="مثال: 09123456789" required>
+            <button type="submit">بررسی وضعیت</button>
+        </form>
+        <div id="statusResult"></div>
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
